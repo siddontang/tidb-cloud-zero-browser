@@ -11,17 +11,21 @@
       --bg: #0f1117;
       --surface: #1a1d27;
       --surface2: #22263a;
+      --surface3: #191c2a;
       --border: #2e3350;
       --accent: #f76e3c;
-      --accent2: #e84545;
       --text: #e2e8f0;
       --text-muted: #7c85a2;
+      --text-faint: #4a5180;
       --green: #4ade80;
       --yellow: #fbbf24;
       --red: #f87171;
       --blue: #60a5fa;
+      --purple: #a78bfa;
       --radius: 8px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+      --sidebar-w: 260px;
+      --history-w: 190px;
     }
 
     body {
@@ -34,408 +38,312 @@
       overflow: hidden;
     }
 
-    /* ── Splash / Provisioning Screen ─────────────────────────── */
+    /* ── Splash ─────────────────────────────────────────────────── */
     #splash {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      z-index: 100;
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 24px; z-index: 100;
       transition: opacity 0.4s ease;
     }
     #splash.hidden { opacity: 0; pointer-events: none; }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-    .logo svg { width: 40px; height: 40px; }
-
+    .splash-logo { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; }
+    .splash-logo svg { width: 40px; height: 40px; }
     .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .spinner {
-      width: 44px; height: 44px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      width: 40px; height: 40px;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .spinner-sm {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      display: inline-block;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    #splash-status {
-      color: var(--text-muted);
-      font-size: 14px;
-      letter-spacing: 0.3px;
-    }
-
+    #splash-status { color: var(--text-muted); font-size: 14px; }
     #splash-error {
-      display: none;
-      max-width: 480px;
-      background: #2a1a1a;
-      border: 1px solid var(--red);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      color: var(--red);
-      font-size: 13px;
-      line-height: 1.6;
-      text-align: center;
+      display: none; max-width: 460px; background: #2a1414;
+      border: 1px solid var(--red); border-radius: var(--radius);
+      padding: 16px 20px; color: var(--red); font-size: 13px;
+      line-height: 1.6; text-align: center;
     }
     #splash-error button {
-      margin-top: 12px;
-      padding: 8px 20px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+      margin-top: 10px; padding: 7px 18px; background: var(--accent);
+      color: #fff; border: none; border-radius: 6px; cursor: pointer;
+      font-size: 13px; font-weight: 600;
     }
 
-    /* ── Top Bar ───────────────────────────────────────────────── */
+    /* ── Top Bar ────────────────────────────────────────────────── */
     #topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      height: 52px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; height: 50px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10;
     }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .topbar-logo { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
     .topbar-logo span { color: var(--accent); }
-
     .badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .badge-preview { background: #2a1f3d; color: #a78bfa; border: 1px solid #4c3889; }
-
-    .topbar-right { display: flex; align-items: center; gap: 10px; }
-
-    #instance-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    .badge-preview { background: #221b38; color: var(--purple); border: 1px solid #3d2e6a; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    #instance-info { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
     #expiry { color: var(--yellow); font-size: 12px; }
 
     .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 14px;
-      border-radius: 6px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 600; cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
     }
     .btn:active { transform: scale(0.97); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-    }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
     .btn-ghost:hover { color: var(--text); border-color: #4a5080; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-run {
       background: linear-gradient(135deg, #f76e3c, #e84545);
-      color: #fff;
-      padding: 8px 20px;
+      color: #fff; padding: 7px 18px; font-size: 13px;
     }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ── Main Layout ───────────────────────────────────────────── */
-    #app {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    #editor-pane {
-      display: flex;
-      flex-direction: column;
-      border-bottom: 1px solid var(--border);
+    /* ── Welcome Banner ─────────────────────────────────────────── */
+    #welcome-banner {
+      background: linear-gradient(135deg, #1a1f38 0%, #1e1530 100%);
+      border-bottom: 1px solid #2e3a5a;
+      padding: 14px 20px;
+      display: flex; align-items: flex-start; gap: 14px;
       flex-shrink: 0;
     }
+    #welcome-banner.hidden { display: none; }
+    .banner-icon {
+      font-size: 24px; flex-shrink: 0; margin-top: 1px;
+    }
+    .banner-body { flex: 1; min-width: 0; }
+    .banner-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .banner-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; }
+    .banner-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .banner-pill {
+      font-size: 11px; padding: 2px 9px; border-radius: 20px;
+      font-weight: 600; border: 1px solid;
+    }
+    .p-green { color: var(--green); border-color: #1a4a2a; background: #0f2a18; }
+    .p-blue  { color: var(--blue);  border-color: #1a3060; background: #0f1e40; }
+    .p-purple{ color: var(--purple);border-color: #3a2860; background: #221840; }
+    .p-yellow{ color: var(--yellow);border-color: #4a3a10; background: #2a2010; }
+    .banner-close {
+      background: none; border: none; color: var(--text-faint);
+      cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 4px;
+      flex-shrink: 0; transition: color 0.15s;
+    }
+    .banner-close:hover { color: var(--text-muted); }
 
+    /* ── Layout ─────────────────────────────────────────────────── */
+    #app { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    #main-area { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left Sidebar ───────────────────────────────────────────── */
+    #left-sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--surface3);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-section { flex-shrink: 0; }
+    .sidebar-section-header {
+      padding: 10px 14px 8px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--text-faint);
+    }
+
+    /* About */
+    .about-body { padding: 0 14px 14px; }
+    .about-body p { font-size: 12px; color: var(--text-muted); line-height: 1.65; margin-bottom: 8px; }
+    .about-body a { color: var(--accent); text-decoration: none; }
+    .about-body a:hover { text-decoration: underline; }
+    .about-facts { display: flex; flex-direction: column; gap: 5px; }
+    .fact {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11.5px; color: var(--text-muted);
+    }
+    .fact-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .sidebar-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* Demo cards */
+    #demos-list { overflow-y: auto; flex: 1; padding: 0 10px 12px; }
+    .demo-card {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 8px; overflow: hidden;
+      transition: border-color 0.15s;
+      cursor: pointer;
+    }
+    .demo-card:hover { border-color: #4a5580; }
+    .demo-card.active { border-color: var(--accent); }
+    .demo-card-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 11px; background: var(--surface2);
+    }
+    .demo-icon { font-size: 16px; flex-shrink: 0; }
+    .demo-card-title { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
+    .demo-card-body {
+      padding: 8px 11px 10px;
+      background: var(--surface3);
+    }
+    .demo-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.55; margin-bottom: 8px; }
+    .demo-card-footer { display: flex; gap: 6px; }
+    .demo-btn {
+      flex: 1; padding: 5px 0; border-radius: 5px; border: none;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .demo-btn:hover { opacity: 0.85; }
+    .demo-btn-load { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .demo-btn-run  { background: var(--accent); color: #fff; }
+
+    /* ── Center: Editor + Results ───────────────────────────────── */
+    #center-area { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    #editor-pane { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .editor-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 14px; background: var(--surface); border-bottom: 1px solid var(--border);
     }
     .editor-toolbar-left { display: flex; align-items: center; gap: 10px; }
-    .toolbar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-    .hint { font-size: 11px; color: var(--text-muted); }
+    .toolbar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-faint); }
+    .hint { font-size: 11px; color: var(--text-faint); }
     .hint kbd {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 1px 5px;
-      font-family: var(--font-mono);
-      font-size: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono); font-size: 10px;
     }
-
+    #active-demo-label {
+      font-size: 11px; color: var(--accent); font-weight: 600;
+      padding: 2px 8px; background: rgba(247,110,60,0.1);
+      border-radius: 4px; display: none;
+    }
     #sql-editor {
-      width: 100%;
-      min-height: 160px;
-      max-height: 280px;
-      resize: vertical;
-      background: #13151f;
-      color: var(--text);
-      border: none;
-      outline: none;
-      padding: 16px;
-      font-family: var(--font-mono);
-      font-size: 14px;
-      line-height: 1.65;
-      tab-size: 2;
-      caret-color: var(--accent);
+      width: 100%; min-height: 150px; max-height: 260px; resize: vertical;
+      background: #13151f; color: var(--text); border: none; outline: none;
+      padding: 14px 16px; font-family: var(--font-mono); font-size: 13.5px;
+      line-height: 1.65; tab-size: 2; caret-color: var(--accent);
     }
-    #sql-editor::placeholder { color: #3a405a; }
+    #sql-editor::placeholder { color: var(--text-faint); }
     #sql-editor:focus { background: #12141e; }
 
-    /* ── Results Pane ──────────────────────────────────────────── */
-    #results-pane {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-
+    /* ── Results ────────────────────────────────────────────────── */
+    #results-pane { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .results-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 14px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
-    .results-meta { display: flex; align-items: center; gap: 12px; }
-    .meta-pill {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    .pill-rows { background: #1a2640; color: var(--blue); }
-    .pill-time { background: #1a2a1a; color: var(--green); }
+    .results-meta { display: flex; align-items: center; gap: 8px; }
+    .meta-pill { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; }
+    .pill-rows     { background: #0f1e40; color: var(--blue); }
+    .pill-time     { background: #0f2318; color: var(--green); }
     .pill-affected { background: #2a2010; color: var(--yellow); }
-    .pill-error { background: #2a1010; color: var(--red); }
-
-    #results-scroll {
-      overflow: auto;
-      flex: 1;
-    }
-
-    #results-container {
-      padding: 16px;
-      min-height: 100%;
-    }
+    .pill-error    { background: #2a1010; color: var(--red); }
+    #results-scroll { overflow: auto; flex: 1; }
+    #results-container { padding: 14px; min-height: 100%; }
 
     .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 160px;
-      gap: 10px;
-      color: var(--text-muted);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 140px; gap: 10px; color: var(--text-faint);
     }
-    .empty-state svg { opacity: 0.3; }
-    .empty-state p { font-size: 14px; }
+    .empty-state p { font-size: 13px; }
 
     .result-table-wrap { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      font-family: var(--font-mono);
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-family: var(--font-mono); }
     thead th {
-      background: var(--surface2);
-      color: var(--text-muted);
-      font-weight: 600;
-      text-align: left;
-      padding: 9px 14px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+      background: var(--surface2); color: var(--text-muted); font-weight: 600;
+      text-align: left; padding: 8px 13px; border-bottom: 1px solid var(--border);
+      white-space: nowrap; font-size: 10.5px; text-transform: uppercase;
+      letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1;
     }
-    tbody tr { transition: background 0.1s; }
     tbody tr:hover { background: var(--surface); }
-    tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.014); }
     tbody tr:nth-child(even):hover { background: var(--surface); }
     td {
-      padding: 8px 14px;
-      border-bottom: 1px solid #1e2238;
-      color: var(--text);
-      white-space: nowrap;
-      max-width: 400px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 7px 13px; border-bottom: 1px solid #1b1e32; color: var(--text);
+      white-space: nowrap; max-width: 380px; overflow: hidden; text-overflow: ellipsis;
     }
-    td.null-val { color: #4a5180; font-style: italic; }
-    td.num-val { color: #93c5fd; }
-    td.str-val { color: #86efac; }
+    td.null-val { color: var(--text-faint); font-style: italic; }
+    td.num-val  { color: #93c5fd; }
+    td.str-val  { color: #86efac; }
 
     .error-box {
-      background: #1e0f0f;
-      border: 1px solid #5c2020;
-      border-radius: var(--radius);
-      padding: 16px;
-      color: var(--red);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.7;
-      white-space: pre-wrap;
+      background: #1e0f0f; border: 1px solid #5c2020; border-radius: var(--radius);
+      padding: 14px; color: var(--red); font-family: var(--font-mono);
+      font-size: 12.5px; line-height: 1.7; white-space: pre-wrap;
     }
-
     .success-box {
-      background: #0f1e0f;
-      border: 1px solid #1e4a1e;
-      border-radius: var(--radius);
-      padding: 16px;
-      color: var(--green);
-      font-size: 14px;
+      background: #0f1e0f; border: 1px solid #1e4a1e; border-radius: var(--radius);
+      padding: 14px; color: var(--green); font-size: 13.5px; line-height: 1.6;
+    }
+    .multi-result { display: flex; flex-direction: column; gap: 12px; }
+    .stmt-result-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--text-faint); margin-bottom: 5px;
     }
 
-    /* ── History ───────────────────────────────────────────────── */
+    /* ── Right: History ─────────────────────────────────────────── */
     #history-pane {
-      width: 220px;
-      flex-shrink: 0;
+      width: var(--history-w); flex-shrink: 0;
       border-left: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      background: var(--surface3); display: flex; flex-direction: column; overflow: hidden;
     }
     .history-header {
-      padding: 10px 14px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      padding: 10px 13px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-faint);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
     #history-list { overflow-y: auto; flex: 1; }
     .history-item {
-      padding: 10px 14px;
-      border-bottom: 1px solid #1a1d28;
-      cursor: pointer;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: background 0.1s, color 0.1s;
+      padding: 9px 13px; border-bottom: 1px solid #191c28;
+      cursor: pointer; font-family: var(--font-mono); font-size: 10.5px;
+      color: var(--text-muted); overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; transition: background 0.1s, color 0.1s;
     }
     .history-item:hover { background: var(--surface2); color: var(--text); }
+    .history-empty { padding: 20px 13px; font-size: 11px; color: var(--text-faint); text-align: center; }
 
-    /* ── Main content area ─────────────────────────────────────── */
-    #main-area {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-    #center-area {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* ── Connection string modal ───────────────────────────────── */
+    /* ── Connection Modal ───────────────────────────────────────── */
     #conn-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65); z-index: 200;
+      align-items: center; justify-content: center;
     }
     #conn-modal.open { display: flex; }
     .modal-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      width: 560px;
-      max-width: 90vw;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 22px; width: 540px; max-width: 92vw;
     }
     .modal-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      font-size: 15px; font-weight: 700; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
     }
     .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; }
-    .conn-row {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-bottom: 14px;
-    }
-    .conn-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); }
+    .conn-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .conn-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); }
     .conn-value {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 12px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--text);
-      word-break: break-all;
-      cursor: text;
-      user-select: all;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 11px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text);
+      word-break: break-all; cursor: text; user-select: all;
     }
+    .modal-note { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; line-height: 1.5; }
   </style>
 </head>
 <body>
 
-<!-- ── Splash Screen ──────────────────────────────────────────── -->
+<!-- ── Splash ──────────────────────────────────────────────────── -->
 <div id="splash">
-  <div class="logo">
-    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <div class="splash-logo">
+    <svg viewBox="0 0 40 40" fill="none">
       <rect width="40" height="40" rx="10" fill="#f76e3c" fill-opacity="0.15"/>
-      <path d="M20 6L34 14V26L20 34L6 26V14L20 6Z" stroke="#f76e3c" stroke-width="2" fill="none"/>
-      <path d="M20 6L20 34M6 14L34 14M6 26L34 26" stroke="#f76e3c" stroke-width="1.5" stroke-opacity="0.4"/>
+      <path d="M20 6L34 14V26L20 34L6 26V14L20 6Z" stroke="#f76e3c" stroke-width="2"/>
+      <path d="M20 6v28M6 14h28M6 26h28" stroke="#f76e3c" stroke-width="1.5" stroke-opacity="0.4"/>
     </svg>
     TiDB Cloud <span style="color:var(--accent)">Zero</span>
   </div>
@@ -445,14 +353,14 @@
   </div>
   <div id="splash-error">
     <strong>Failed to provision instance</strong><br>
-    <span id="splash-error-msg"></span>
-    <br>
+    <span id="splash-error-msg"></span><br>
     <button onclick="retryInit()">Retry</button>
   </div>
 </div>
 
-<!-- ── App Shell ──────────────────────────────────────────────── -->
+<!-- ── App ─────────────────────────────────────────────────────── -->
 <div id="app" style="display:none">
+
   <!-- Top bar -->
   <div id="topbar">
     <div class="topbar-left">
@@ -464,27 +372,151 @@
         <div class="dot"></div>
         <span id="expiry"></span>
       </div>
-      <button class="btn btn-ghost" onclick="showConnModal()">Connection Info</button>
+      <button class="btn btn-ghost" onclick="showConnModal()">Connection</button>
       <button class="btn btn-ghost" onclick="newInstance()">New Instance</button>
     </div>
   </div>
 
-  <!-- Main -->
+  <!-- Welcome banner -->
+  <div id="welcome-banner">
+    <div class="banner-icon">⚡</div>
+    <div class="banner-body">
+      <div class="banner-title">Your TiDB Cloud Zero database is ready</div>
+      <div class="banner-desc">
+        A full MySQL-compatible database provisioned in milliseconds — no signup, no config.
+        Use the SQL editor below to run queries, or pick a demo from the left panel to explore
+        common use cases like AI agent memory and vector search. Your instance expires in ~72h.
+      </div>
+      <div class="banner-pills">
+        <span class="banner-pill p-green">MySQL 8.0 compatible</span>
+        <span class="banner-pill p-blue">Vector search</span>
+        <span class="banner-pill p-purple">Full-text search</span>
+        <span class="banner-pill p-yellow">72h TTL · No signup</span>
+      </div>
+    </div>
+    <button class="banner-close" onclick="dismissBanner()" title="Dismiss">×</button>
+  </div>
+
+  <!-- Main content -->
   <div id="main-area">
+
+    <!-- Left sidebar: About + Demos -->
+    <div id="left-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">About</div>
+        <div class="about-body">
+          <p>
+            <a href="https://zero.tidbcloud.com" target="_blank">TiDB Cloud Zero</a> gives you
+            a disposable, full-featured database in milliseconds. Perfect for prototyping,
+            AI agents, and experiments.
+          </p>
+          <div class="about-facts">
+            <div class="fact"><div class="fact-dot" style="background:var(--green)"></div>Instant provisioning, no signup</div>
+            <div class="fact"><div class="fact-dot" style="background:var(--blue)"></div>MySQL-compatible (TiDB 8.0)</div>
+            <div class="fact"><div class="fact-dot" style="background:var(--purple)"></div>Native vector &amp; full-text search</div>
+            <div class="fact"><div class="fact-dot" style="background:var(--yellow)"></div>Auto-expires after 72 hours</div>
+            <div class="fact"><div class="fact-dot" style="background:var(--accent)"></div>One shared instance per session</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="sidebar-section-header">Demo Scenarios</div>
+        <div id="demos-list">
+
+          <!-- Demo 1: Quick Start -->
+          <div class="demo-card" id="demo-card-0">
+            <div class="demo-card-header">
+              <span class="demo-icon">🚀</span>
+              <span class="demo-card-title">Quick Start</span>
+            </div>
+            <div class="demo-card-body">
+              <div class="demo-card-desc">Create a table, insert rows, and run your first SELECT. The perfect starting point.</div>
+              <div class="demo-card-footer">
+                <button class="demo-btn demo-btn-load" onclick="loadDemo(0)">Load</button>
+                <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(0)">Run All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo 2: AI Agent Memory -->
+          <div class="demo-card" id="demo-card-1">
+            <div class="demo-card-header">
+              <span class="demo-icon">🧠</span>
+              <span class="demo-card-title">AI Agent Memory</span>
+            </div>
+            <div class="demo-card-body">
+              <div class="demo-card-desc">Store and retrieve conversation history for AI agents across sessions — with importance ranking.</div>
+              <div class="demo-card-footer">
+                <button class="demo-btn demo-btn-load" onclick="loadDemo(1)">Load</button>
+                <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(1)">Run All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo 3: Vector Search -->
+          <div class="demo-card" id="demo-card-2">
+            <div class="demo-card-header">
+              <span class="demo-icon">🔍</span>
+              <span class="demo-card-title">Vector Search</span>
+            </div>
+            <div class="demo-card-body">
+              <div class="demo-card-desc">Store document embeddings and find semantically similar content using TiDB's built-in VECTOR type.</div>
+              <div class="demo-card-footer">
+                <button class="demo-btn demo-btn-load" onclick="loadDemo(2)">Load</button>
+                <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(2)">Run All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo 4: Agent State -->
+          <div class="demo-card" id="demo-card-3">
+            <div class="demo-card-header">
+              <span class="demo-icon">🗄️</span>
+              <span class="demo-card-title">Agent State Store</span>
+            </div>
+            <div class="demo-card-body">
+              <div class="demo-card-desc">Persist structured key-value state for AI agents between runs using JSON columns and upserts.</div>
+              <div class="demo-card-footer">
+                <button class="demo-btn demo-btn-load" onclick="loadDemo(3)">Load</button>
+                <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(3)">Run All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo 5: Full-Text Search -->
+          <div class="demo-card" id="demo-card-4">
+            <div class="demo-card-header">
+              <span class="demo-icon">📝</span>
+              <span class="demo-card-title">Full-Text Search</span>
+            </div>
+            <div class="demo-card-body">
+              <div class="demo-card-desc">Index and search natural language content at scale — useful for retrieval-augmented generation (RAG).</div>
+              <div class="demo-card-footer">
+                <button class="demo-btn demo-btn-load" onclick="loadDemo(4)">Load</button>
+                <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(4)">Run All</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /demos-list -->
+      </div>
+    </div><!-- /left-sidebar -->
+
     <!-- Center: editor + results -->
     <div id="center-area">
-      <!-- Editor pane -->
       <div id="editor-pane">
         <div class="editor-toolbar">
           <div class="editor-toolbar-left">
             <span class="toolbar-label">SQL Editor</span>
+            <span id="active-demo-label"></span>
             <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
           </div>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-ghost" onclick="clearEditor()">Clear</button>
-            <button class="btn btn-run" id="run-btn" onclick="runQuery()">
-              ▶ Run
-            </button>
+            <button class="btn btn-run" id="run-btn" onclick="runQuery()">▶ Run</button>
           </div>
         </div>
         <textarea
@@ -492,11 +524,14 @@
           spellcheck="false"
           autocomplete="off"
           autocorrect="off"
-          placeholder="-- Write your SQL here&#10;-- e.g. SELECT version();&#10;-- e.g. CREATE TABLE users (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100));"
+          placeholder="-- Write SQL here, e.g.:
+-- SELECT version();
+-- CREATE TABLE test (id INT PRIMARY KEY AUTO_INCREMENT, val TEXT);
+--
+-- Tip: pick a demo from the left panel to get started instantly."
         ></textarea>
       </div>
 
-      <!-- Results pane -->
       <div id="results-pane">
         <div class="results-toolbar">
           <span class="toolbar-label">Results</span>
@@ -505,7 +540,7 @@
         <div id="results-scroll">
           <div id="results-container">
             <div class="empty-state">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                 <path d="M3 9h18M3 15h18M9 3v18"/>
               </svg>
@@ -516,73 +551,204 @@
       </div>
     </div>
 
-    <!-- History sidebar -->
+    <!-- Right: history -->
     <div id="history-pane">
       <div class="history-header">History</div>
-      <div id="history-list"></div>
+      <div id="history-list">
+        <div class="history-empty">No queries yet</div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- Connection info modal -->
+  </div><!-- /main-area -->
+</div><!-- /app -->
+
+<!-- Connection modal -->
 <div id="conn-modal">
   <div class="modal-box">
     <div class="modal-title">
       Connection Details
       <span class="modal-close" onclick="closeConnModal()">×</span>
     </div>
-    <div class="conn-row">
-      <div class="conn-label">Connection String</div>
-      <div class="conn-value" id="modal-connstr"></div>
-    </div>
-    <div class="conn-row">
-      <div class="conn-label">Host</div>
-      <div class="conn-value" id="modal-host"></div>
-    </div>
-    <div class="conn-row">
-      <div class="conn-label">Username</div>
-      <div class="conn-value" id="modal-user"></div>
-    </div>
-    <div class="conn-row">
-      <div class="conn-label">Password</div>
-      <div class="conn-value" id="modal-pass"></div>
-    </div>
-    <div class="conn-row">
-      <div class="conn-label">Database</div>
-      <div class="conn-value" id="modal-db"></div>
-    </div>
-    <div class="conn-row">
-      <div class="conn-label">Expires At</div>
-      <div class="conn-value" id="modal-expires"></div>
-    </div>
+    <div class="conn-row"><div class="conn-label">Connection String</div><div class="conn-value" id="modal-connstr"></div></div>
+    <div class="conn-row"><div class="conn-label">Host</div><div class="conn-value" id="modal-host"></div></div>
+    <div class="conn-row"><div class="conn-label">Username</div><div class="conn-value" id="modal-user"></div></div>
+    <div class="conn-row"><div class="conn-label">Password</div><div class="conn-value" id="modal-pass"></div></div>
+    <div class="conn-row"><div class="conn-label">Database</div><div class="conn-value" id="modal-db"></div></div>
+    <div class="conn-row"><div class="conn-label">Expires At</div><div class="conn-value" id="modal-expires"></div></div>
+    <p class="modal-note">Click any field to select all. Connect with any MySQL client using TLS on port 4000.</p>
   </div>
 </div>
 
 <script>
-  const STORAGE_KEY = 'tidb-zero-instance-v1';
+  const STORAGE_KEY  = 'tidb-zero-instance-v1';
+  const BANNER_KEY   = 'tidb-zero-banner-dismissed';
 
-  let dbConfig = null;
-  let queryHistory = [];
+  let dbConfig      = null;
+  let queryHistory  = [];
+  let activeDemoIdx = -1;
 
-  // ── Instance Management ───────────────────────────────────────
+  // ── Demo Definitions ───────────────────────────────────────────
 
-  // L1: localStorage  (per-browser, survives page reloads)
-  // L2: /api/instance (server-side module cache, shared across browsers while warm)
-  // Creating a new instance clears both layers.
+  const DEMOS = [
+    {
+      name: '🚀 Quick Start',
+      statements: [
+        `-- Create a simple table
+CREATE TABLE IF NOT EXISTS messages (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  text       VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`,
+        `-- Insert some rows
+INSERT INTO messages (text) VALUES
+  ('Hello from TiDB Cloud Zero!'),
+  ('Zero config. Zero signup. Ready in milliseconds.'),
+  ('MySQL-compatible — use any MySQL client or ORM.')`,
+        `-- Query the data
+SELECT id, text, created_at FROM messages ORDER BY id`,
+      ],
+    },
+    {
+      name: '🧠 AI Agent Memory',
+      statements: [
+        `-- Long-term memory store for AI agents.
+-- Persists conversation history and facts across sessions.
+CREATE TABLE IF NOT EXISTS agent_memories (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  session_id  VARCHAR(64) NOT NULL,
+  role        ENUM('system','user','assistant') NOT NULL,
+  content     TEXT NOT NULL,
+  importance  TINYINT DEFAULT 5 COMMENT '1=low, 10=critical',
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_session (session_id, created_at)
+)`,
+        `-- Simulate storing a conversation
+INSERT INTO agent_memories (session_id, role, content, importance) VALUES
+  ('sess_demo', 'system',    'You are a helpful assistant with persistent memory.', 10),
+  ('sess_demo', 'user',      'My name is Alice and I prefer concise answers.',       9),
+  ('sess_demo', 'assistant', 'Noted, Alice — I will keep responses brief.',          5),
+  ('sess_demo', 'user',      'I am building a distributed database system.',         9),
+  ('sess_demo', 'assistant', 'Great — I will tailor answers to distributed systems.',5),
+  ('sess_demo', 'user',      'What databases support vector search natively?',       7),
+  ('sess_demo', 'assistant', 'TiDB, pgvector, and Pinecone are popular options.',    6)`,
+        `-- Retrieve high-priority memories for the agent context window
+SELECT role, content, importance, created_at
+FROM   agent_memories
+WHERE  session_id = 'sess_demo'
+ORDER  BY importance DESC, created_at ASC`,
+      ],
+    },
+    {
+      name: '🔍 Vector Search',
+      statements: [
+        `-- Semantic similarity search using TiDB's native VECTOR type.
+-- In production, use 1536-dim embeddings from OpenAI / similar.
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title      VARCHAR(255)  NOT NULL,
+  content    TEXT          NOT NULL,
+  embedding  VECTOR(4)     NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`,
+        `-- Store documents with embeddings
+INSERT INTO knowledge_base (title, content, embedding) VALUES
+  ('TiDB Overview',    'TiDB is a distributed NewSQL database for HTAP workloads.',       '[0.92, 0.11, 0.34, 0.78]'),
+  ('MySQL Basics',     'MySQL is the most popular open-source relational database.',       '[0.88, 0.15, 0.32, 0.72]'),
+  ('Redis Guide',      'Redis is an in-memory key-value store used for caching.',         '[0.21, 0.85, 0.67, 0.12]'),
+  ('Vector Databases', 'Vector DBs enable semantic search over high-dim embeddings.',     '[0.45, 0.33, 0.91, 0.55]'),
+  ('AI Agent Memory',  'AI agents use databases to persist memory between sessions.',     '[0.50, 0.30, 0.88, 0.60]'),
+  ('RAG Systems',      'Retrieval-augmented generation grounds LLM answers in real data.','[0.48, 0.29, 0.86, 0.62]')`,
+        `-- Semantic search: find docs closest to "AI memory and databases"
+-- (query vector is a synthetic embedding for that concept)
+SELECT
+  title,
+  content,
+  ROUND(VEC_COSINE_DISTANCE(embedding, '[0.48, 0.32, 0.90, 0.58]'), 4) AS distance
+FROM   knowledge_base
+ORDER  BY distance ASC
+LIMIT  3`,
+      ],
+    },
+    {
+      name: '🗄️ Agent State Store',
+      statements: [
+        `-- Persistent key-value store for AI agent state.
+-- JSON column lets agents store structured data per key.
+CREATE TABLE IF NOT EXISTS agent_state (
+  agent_id   VARCHAR(64)  NOT NULL,
+  key_name   VARCHAR(255) NOT NULL,
+  value      JSON,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (agent_id, key_name)
+)`,
+        `-- Agent writes its state after each run (upsert)
+INSERT INTO agent_state (agent_id, key_name, value) VALUES
+  ('planner_v1', 'status',      '"active"'),
+  ('planner_v1', 'task_count',  '42'),
+  ('planner_v1', 'last_action', '"web_search"'),
+  ('planner_v1', 'context',     '{"goal":"Research TiDB Zero","steps_done":3,"next":"summarize"}'),
+  ('planner_v1', 'tools_used',  '["web_search","code_runner","memory_store"]'),
+  ('planner_v1', 'error_count', '0')
+ON DUPLICATE KEY UPDATE
+  value      = VALUES(value),
+  updated_at = NOW()`,
+        `-- Agent reads full state on next wake-up
+SELECT
+  key_name,
+  value,
+  updated_at
+FROM   agent_state
+WHERE  agent_id = 'planner_v1'
+ORDER  BY key_name`,
+      ],
+    },
+    {
+      name: '📝 Full-Text Search',
+      statements: [
+        `-- Full-text search for RAG (Retrieval-Augmented Generation).
+-- Index large text corpora and retrieve relevant chunks fast.
+CREATE TABLE IF NOT EXISTS documents (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title      VARCHAR(255) NOT NULL,
+  body       TEXT NOT NULL,
+  author     VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FULLTEXT INDEX ft_body (title, body)
+)`,
+        `-- Insert sample documents (knowledge base chunks)
+INSERT INTO documents (title, body, author) VALUES
+  ('TiDB Architecture',      'TiDB separates compute from storage. TiKV handles key-value storage with Raft consensus. TiFlash provides columnar storage for analytical queries.', 'PingCAP'),
+  ('Vector Search in TiDB',  'TiDB supports native VECTOR data type with cosine distance and L2 distance functions. Ideal for semantic search in AI applications.', 'PingCAP'),
+  ('Serverless Databases',   'Serverless databases scale to zero and charge per request. TiDB Cloud Serverless and Zero offer instant provisioning without configuration.', 'PingCAP'),
+  ('AI Agent Architectures', 'Modern AI agents combine LLMs with external memory stores, tool use, and retrieval systems. Databases play a central role in agent state management.', 'Research'),
+  ('RAG with TiDB',          'Retrieval-augmented generation uses a vector database to fetch relevant context before passing it to an LLM. TiDB can serve both vector and relational needs.', 'PingCAP')`,
+        `-- Full-text search across title and body
+SELECT
+  title,
+  author,
+  MATCH(title, body) AGAINST ('vector search AI agent' IN NATURAL LANGUAGE MODE) AS relevance,
+  LEFT(body, 100) AS excerpt
+FROM   documents
+WHERE  MATCH(title, body) AGAINST ('vector search AI agent' IN NATURAL LANGUAGE MODE)
+ORDER  BY relevance DESC`,
+      ],
+    },
+  ];
+
+  // ── Instance Management ────────────────────────────────────────
 
   async function fetchInstance(forceNew = false) {
-    setSplashStatus(forceNew ? 'Provisioning new TiDB Cloud Zero instance…' : 'Connecting to TiDB Cloud Zero…');
+    setSplashStatus(forceNew ? 'Provisioning new instance…' : 'Connecting to TiDB Cloud Zero…');
     const res = await fetch('/api/instance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ force: forceNew }),
     });
     if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
-    return res.json(); // { connectionString, expiresAt }
+    return res.json();
   }
 
   function parseConnectionString(connStr) {
-    // mysql://user:pass@host/database
     const url = new URL(connStr);
     return {
       host:     url.hostname,
@@ -593,15 +759,13 @@
   }
 
   function isExpired(expiresAt) {
-    // Treat as expired if less than 5 minutes remain
     return !expiresAt || new Date(expiresAt) <= new Date(Date.now() + 5 * 60_000);
   }
 
-  // ── SQL Execution ─────────────────────────────────────────────
+  // ── SQL Execution ──────────────────────────────────────────────
 
   async function executeSQL(sql) {
     const { host, username, password, database } = dbConfig;
-
     const res = await fetch('/api/sql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -614,27 +778,39 @@
     return res.json();
   }
 
-  // ── Run Query ─────────────────────────────────────────────────
+  // Split SQL on semicolons (respects simple string literals, skips comments)
+  function splitStatements(sql) {
+    // Strip -- line comments, then split on ;
+    const stripped = sql.replace(/--[^\n]*/g, '');
+    return stripped.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  }
+
+  // ── Run Query ──────────────────────────────────────────────────
 
   async function runQuery() {
-    const sql = document.getElementById('sql-editor').value.trim();
-    if (!sql) return;
+    const raw = document.getElementById('sql-editor').value.trim();
+    if (!raw) return;
 
     const btn = document.getElementById('run-btn');
     btn.disabled = true;
-    btn.textContent = '⏳ Running…';
+    btn.innerHTML = '<span class="spinner-sm"></span> Running…';
 
     setResultsMeta([]);
     setResultsContent('<div class="empty-state"><div class="spinner"></div></div>');
 
+    const statements = splitStatements(raw);
     const t0 = Date.now();
+
     try {
-      const result = await executeSQL(sql);
-      const elapsed = Date.now() - t0;
-      renderResult(result, elapsed);
-      addHistory(sql);
+      if (statements.length === 1) {
+        const result  = await executeSQL(statements[0]);
+        const elapsed = Date.now() - t0;
+        renderResult(result, elapsed);
+      } else {
+        await runMultiple(statements, t0);
+      }
+      addHistory(raw);
     } catch (err) {
-      const elapsed = Date.now() - t0;
       setResultsMeta([{ label: 'Error', cls: 'pill-error' }]);
       setResultsContent(`<div class="error-box">${escHtml(err.message)}</div>`);
     } finally {
@@ -643,87 +819,164 @@
     }
   }
 
-  function renderResult(result, elapsed) {
-    const meta = [];
+  async function runMultiple(statements, t0) {
+    const results = [];
+    for (let i = 0; i < statements.length; i++) {
+      const stmt = statements[i];
+      setResultsContent(`<div class="empty-state"><div class="spinner"></div><p>Running statement ${i + 1} / ${statements.length}…</p></div>`);
+      const result = await executeSQL(stmt);
+      results.push({ stmt, result });
+    }
+    const elapsed = Date.now() - t0;
 
-    // SELECT-like: has columns + rows
-    if (result.types && result.rows !== undefined) {
-      const cols  = result.types;  // array of { name, type }
-      const rows  = result.rows;   // array of arrays
-      const count = rows ? rows.length : 0;
+    // Show only the last meaningful result (SELECT), or summary of DML
+    const last = results[results.length - 1];
+    const hasRows = last.result.types && last.result.rows !== undefined;
 
-      meta.push({ label: `${count} row${count !== 1 ? 's' : ''}`, cls: 'pill-rows' });
-      meta.push({ label: `${elapsed}ms`, cls: 'pill-time' });
-      setResultsMeta(meta);
-
-      if (count === 0) {
-        setResultsContent('<div class="empty-state"><p>Query returned 0 rows</p></div>');
-        return;
-      }
-
-      let html = '<div class="result-table-wrap"><table><thead><tr>';
-      for (const col of cols) {
-        html += `<th>${escHtml(col.name)}</th>`;
-      }
-      html += '</tr></thead><tbody>';
-
-      for (const row of rows) {
-        html += '<tr>';
-        for (let i = 0; i < cols.length; i++) {
-          const val = row[i];
-          if (val === null || val === undefined) {
-            html += `<td class="null-val">NULL</td>`;
-          } else {
-            const type = (cols[i].type || '').toLowerCase();
-            const isNum = /int|float|double|decimal|bigint|tinyint|smallint/.test(type);
-            const cls   = isNum ? 'num-val' : 'str-val';
-            html += `<td class="${cls}" title="${escHtml(String(val))}">${escHtml(String(val))}</td>`;
-          }
-        }
-        html += '</tr>';
-      }
-      html += '</tbody></table></div>';
-      setResultsContent(html);
-
+    if (hasRows) {
+      setResultsMeta([
+        { label: `${statements.length} statements`, cls: 'pill-affected' },
+        { label: `${elapsed}ms total`, cls: 'pill-time' },
+      ]);
+      renderSelectResult(last.result, elapsed, false);
     } else {
-      // DML/DDL: rowsAffected
+      // Summarise all DML
+      const totalAffected = results.reduce((s, r) => s + (r.result.rowsAffected ?? 0), 0);
+      setResultsMeta([
+        { label: `${statements.length} statements`, cls: 'pill-affected' },
+        { label: `${totalAffected} rows affected`, cls: 'pill-affected' },
+        { label: `${elapsed}ms`, cls: 'pill-time' },
+      ]);
+      const summaryHtml = results.map((r, i) => {
+        const aff = r.result.rowsAffected ?? 0;
+        const preview = r.stmt.replace(/\s+/g, ' ').slice(0, 60);
+        return `<div style="padding:6px 0;border-bottom:1px solid #1b1e32;font-size:12px;font-family:var(--font-mono)">
+          <span style="color:var(--text-faint)">${i + 1}.</span>
+          <span style="color:var(--text-muted)">${escHtml(preview)}…</span>
+          <span style="color:var(--green);float:right">${aff} affected</span>
+        </div>`;
+      }).join('');
+      setResultsContent(`<div>${summaryHtml}</div>`);
+    }
+  }
+
+  function renderResult(result, elapsed) {
+    if (result.types && result.rows !== undefined) {
+      const count = result.rows ? result.rows.length : 0;
+      setResultsMeta([
+        { label: `${count} row${count !== 1 ? 's' : ''}`, cls: 'pill-rows' },
+        { label: `${elapsed}ms`, cls: 'pill-time' },
+      ]);
+      renderSelectResult(result, elapsed, true);
+    } else {
       const affected = result.rowsAffected ?? 0;
       const insertId = result.lastInsertID ?? result.lastInsertId ?? null;
-
-      meta.push({ label: `${affected} affected`, cls: 'pill-affected' });
-      meta.push({ label: `${elapsed}ms`, cls: 'pill-time' });
-      setResultsMeta(meta);
-
+      setResultsMeta([
+        { label: `${affected} affected`, cls: 'pill-affected' },
+        { label: `${elapsed}ms`, cls: 'pill-time' },
+      ]);
       let msg = `Query OK — <strong>${affected}</strong> row${affected !== 1 ? 's' : ''} affected`;
       if (insertId !== null && insertId !== 0) msg += ` &nbsp;·&nbsp; Last insert ID: <strong>${insertId}</strong>`;
       setResultsContent(`<div class="success-box">${msg}</div>`);
     }
   }
 
-  // ── UI Helpers ────────────────────────────────────────────────
+  function renderSelectResult(result, elapsed, updateMeta) {
+    const cols  = result.types;
+    const rows  = result.rows || [];
+    const count = rows.length;
 
-  function setSplashStatus(msg) {
-    document.getElementById('splash-status').textContent = msg;
+    if (updateMeta) {
+      setResultsMeta([
+        { label: `${count} row${count !== 1 ? 's' : ''}`, cls: 'pill-rows' },
+        { label: `${elapsed}ms`, cls: 'pill-time' },
+      ]);
+    }
+
+    if (count === 0) {
+      setResultsContent('<div class="empty-state"><p>Query returned 0 rows</p></div>');
+      return;
+    }
+
+    let html = '<div class="result-table-wrap"><table><thead><tr>';
+    for (const col of cols) html += `<th>${escHtml(col.name)}</th>`;
+    html += '</tr></thead><tbody>';
+
+    for (const row of rows) {
+      html += '<tr>';
+      for (let i = 0; i < cols.length; i++) {
+        const val = row[i];
+        if (val === null || val === undefined) {
+          html += '<td class="null-val">NULL</td>';
+        } else {
+          const type  = (cols[i].type || '').toLowerCase();
+          const isNum = /int|float|double|decimal|bigint|tinyint|smallint/.test(type);
+          const cls   = isNum ? 'num-val' : 'str-val';
+          html += `<td class="${cls}" title="${escHtml(String(val))}">${escHtml(String(val))}</td>`;
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    setResultsContent(html);
   }
+
+  // ── Demo Loading ───────────────────────────────────────────────
+
+  function loadDemo(idx) {
+    const demo = DEMOS[idx];
+    const sql  = demo.statements.join(';\n\n') + ';';
+    document.getElementById('sql-editor').value = sql;
+    document.getElementById('sql-editor').focus();
+    setActiveDemo(idx);
+  }
+
+  async function loadAndRunDemo(idx) {
+    loadDemo(idx);
+    await runQuery();
+  }
+
+  function setActiveDemo(idx) {
+    activeDemoIdx = idx;
+    document.querySelectorAll('.demo-card').forEach((c, i) => {
+      c.classList.toggle('active', i === idx);
+    });
+    const label = document.getElementById('active-demo-label');
+    if (idx >= 0) {
+      label.textContent = DEMOS[idx].name;
+      label.style.display = 'inline-block';
+    } else {
+      label.style.display = 'none';
+    }
+  }
+
+  // ── UI Helpers ─────────────────────────────────────────────────
+
+  function setSplashStatus(msg) { document.getElementById('splash-status').textContent = msg; }
 
   function showApp() {
     const splash = document.getElementById('splash');
     splash.classList.add('hidden');
     setTimeout(() => { splash.style.display = 'none'; }, 400);
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
+    document.getElementById('app').style.cssText = 'display:flex;flex-direction:column;flex:1';
+    if (localStorage.getItem(BANNER_KEY) === '1') {
+      document.getElementById('welcome-banner').classList.add('hidden');
+    }
   }
 
   function showSplashError(msg) {
     document.querySelector('.spinner-wrap').style.display = 'none';
-    const errEl = document.getElementById('splash-error');
-    errEl.style.display = 'block';
+    document.getElementById('splash-error').style.display = 'block';
     document.getElementById('splash-error-msg').textContent = msg;
   }
 
+  function dismissBanner() {
+    document.getElementById('welcome-banner').classList.add('hidden');
+    localStorage.setItem(BANNER_KEY, '1');
+  }
+
   function setResultsMeta(items) {
-    const el = document.getElementById('results-meta');
-    el.innerHTML = items.map(i =>
+    document.getElementById('results-meta').innerHTML = items.map(i =>
       `<span class="meta-pill ${i.cls}">${i.label}</span>`
     ).join('');
   }
@@ -733,75 +986,81 @@
   }
 
   function updateInstanceUI(instance) {
-    const expires = new Date(instance.expiresAt);
+    const expires   = new Date(instance.expiresAt);
     const hoursLeft = ((expires - Date.now()) / 3_600_000).toFixed(1);
     document.getElementById('expiry').textContent = `Expires in ${hoursLeft}h`;
-
-    // Modal
     const cfg = parseConnectionString(instance.connectionString);
-    document.getElementById('modal-connstr').textContent  = instance.connectionString;
-    document.getElementById('modal-host').textContent     = cfg.host;
-    document.getElementById('modal-user').textContent     = cfg.username;
-    document.getElementById('modal-pass').textContent     = cfg.password;
-    document.getElementById('modal-db').textContent       = cfg.database;
-    document.getElementById('modal-expires').textContent  = expires.toLocaleString();
+    document.getElementById('modal-connstr').textContent = instance.connectionString;
+    document.getElementById('modal-host').textContent    = cfg.host;
+    document.getElementById('modal-user').textContent    = cfg.username;
+    document.getElementById('modal-pass').textContent    = cfg.password;
+    document.getElementById('modal-db').textContent      = cfg.database;
+    document.getElementById('modal-expires').textContent = expires.toLocaleString();
   }
 
   function clearEditor() {
     document.getElementById('sql-editor').value = '';
     document.getElementById('sql-editor').focus();
+    setActiveDemo(-1);
   }
 
   function addHistory(sql) {
-    const short = sql.replace(/\s+/g, ' ').trim().slice(0, 60);
+    const short = sql.replace(/--[^\n]*/g, '').replace(/\s+/g, ' ').trim().slice(0, 70);
+    if (!short) return;
     queryHistory.unshift(short);
-    if (queryHistory.length > 50) queryHistory.pop();
+    if (queryHistory.length > 60) queryHistory.pop();
     renderHistory();
   }
 
   function renderHistory() {
     const list = document.getElementById('history-list');
+    if (queryHistory.length === 0) {
+      list.innerHTML = '<div class="history-empty">No queries yet</div>';
+      return;
+    }
     list.innerHTML = queryHistory.map((q, i) =>
-      `<div class="history-item" title="${escHtml(q)}" onclick="loadHistory(${i})">${escHtml(q)}</div>`
+      `<div class="history-item" title="${escHtml(q)}" onclick="loadHistoryItem(${i})">${escHtml(q)}</div>`
     ).join('');
   }
 
-  function loadHistory(idx) {
+  function loadHistoryItem(idx) {
     document.getElementById('sql-editor').value = queryHistory[idx];
+    setActiveDemo(-1);
   }
 
-  function showConnModal() { document.getElementById('conn-modal').classList.add('open'); }
+  function showConnModal()  { document.getElementById('conn-modal').classList.add('open'); }
   function closeConnModal() { document.getElementById('conn-modal').classList.remove('open'); }
 
   function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // Click outside modal to close
+  // ── Keyboard ───────────────────────────────────────────────────
+
   document.getElementById('conn-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('conn-modal')) closeConnModal();
   });
 
-  // Ctrl+Enter to run
   document.getElementById('sql-editor').addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      runQuery();
-    }
-    // Tab inserts spaces
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runQuery(); }
     if (e.key === 'Tab') {
       e.preventDefault();
-      const ta = e.target;
-      const s = ta.selectionStart, en = ta.selectionEnd;
+      const ta = e.target, s = ta.selectionStart, en = ta.selectionEnd;
       ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(en);
       ta.selectionStart = ta.selectionEnd = s + 2;
     }
   });
 
-  // ── Init ──────────────────────────────────────────────────────
+  // Clear active demo label when user edits manually
+  document.getElementById('sql-editor').addEventListener('input', () => {
+    if (activeDemoIdx >= 0) setActiveDemo(-1);
+  });
+
+  // ── Init ───────────────────────────────────────────────────────
 
   async function init(forceNew = false) {
-    // L1: check localStorage first (fastest, avoids a round-trip on warm revisits)
     if (!forceNew) {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -818,7 +1077,6 @@
       } catch (_) {}
     }
 
-    // L2: ask the server (it keeps its own module-level cache shared across clients)
     try {
       const instance = await fetchInstance(forceNew);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(instance));
@@ -831,14 +1089,15 @@
   }
 
   async function newInstance() {
-    if (!confirm('Create a new instance? The current instance and all its data will be discarded.')) return;
+    if (!confirm('Provision a new instance? All data in the current instance will be lost.')) return;
     localStorage.removeItem(STORAGE_KEY);
     document.getElementById('app').style.display = 'none';
-    document.getElementById('splash').style.display = 'flex';
-    document.getElementById('splash').classList.remove('hidden');
+    const splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    splash.classList.remove('hidden');
     document.querySelector('.spinner-wrap').style.display = 'flex';
     document.getElementById('splash-error').style.display = 'none';
-    await init(true); // forceNew=true clears server cache too
+    await init(true);
   }
 
   function retryInit() {
