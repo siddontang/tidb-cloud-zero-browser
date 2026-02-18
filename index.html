@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TiDB Cloud Zero — SQL Editor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #f76e3c;
+      --accent2: #e84545;
+      --text: #e2e8f0;
+      --text-muted: #7c85a2;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --radius: 8px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Splash / Provisioning Screen ─────────────────────────── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 100;
+      transition: opacity 0.4s ease;
+    }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .logo svg { width: 40px; height: 40px; }
+
+    .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #splash-status {
+      color: var(--text-muted);
+      font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+
+    #splash-error {
+      display: none;
+      max-width: 480px;
+      background: #2a1a1a;
+      border: 1px solid var(--red);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: var(--red);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    #splash-error button {
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── Top Bar ───────────────────────────────────────────────── */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-logo span { color: var(--accent); }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-preview { background: #2a1f3d; color: #a78bfa; border: 1px solid #4c3889; }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    #instance-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    #expiry { color: var(--yellow); font-size: 12px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: #4a5080; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-run {
+      background: linear-gradient(135deg, #f76e3c, #e84545);
+      color: #fff;
+      padding: 8px 20px;
+    }
+
+    /* ── Main Layout ───────────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #editor-pane {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .editor-toolbar-left { display: flex; align-items: center; gap: 10px; }
+    .toolbar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .hint { font-size: 11px; color: var(--text-muted); }
+    .hint kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    #sql-editor {
+      width: 100%;
+      min-height: 160px;
+      max-height: 280px;
+      resize: vertical;
+      background: #13151f;
+      color: var(--text);
+      border: none;
+      outline: none;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.65;
+      tab-size: 2;
+      caret-color: var(--accent);
+    }
+    #sql-editor::placeholder { color: #3a405a; }
+    #sql-editor:focus { background: #12141e; }
+
+    /* ── Results Pane ──────────────────────────────────────────── */
+    #results-pane {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .results-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .results-meta { display: flex; align-items: center; gap: 12px; }
+    .meta-pill {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .pill-rows { background: #1a2640; color: var(--blue); }
+    .pill-time { background: #1a2a1a; color: var(--green); }
+    .pill-affected { background: #2a2010; color: var(--yellow); }
+    .pill-error { background: #2a1010; color: var(--red); }
+
+    #results-scroll {
+      overflow: auto;
+      flex: 1;
+    }
+
+    #results-container {
+      padding: 16px;
+      min-height: 100%;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 160px;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { opacity: 0.3; }
+    .empty-state p { font-size: 14px; }
+
+    .result-table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+    thead th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody tr { transition: background 0.1s; }
+    tbody tr:hover { background: var(--surface); }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+    tbody tr:nth-child(even):hover { background: var(--surface); }
+    td {
+      padding: 8px 14px;
+      border-bottom: 1px solid #1e2238;
+      color: var(--text);
+      white-space: nowrap;
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    td.null-val { color: #4a5180; font-style: italic; }
+    td.num-val { color: #93c5fd; }
+    td.str-val { color: #86efac; }
+
+    .error-box {
+      background: #1e0f0f;
+      border: 1px solid #5c2020;
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--red);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .success-box {
+      background: #0f1e0f;
+      border: 1px solid #1e4a1e;
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--green);
+      font-size: 14px;
+    }
+
+    /* ── History ───────────────────────────────────────────────── */
+    #history-pane {
+      width: 220px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .history-header {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #history-list { overflow-y: auto; flex: 1; }
+    .history-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1a1d28;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: background 0.1s, color 0.1s;
+    }
+    .history-item:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── Main content area ─────────────────────────────────────── */
+    #main-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    #center-area {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Connection string modal ───────────────────────────────── */
+    #conn-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #conn-modal.open { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 560px;
+      max-width: 90vw;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; }
+    .conn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 14px;
+    }
+    .conn-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); }
+    .conn-value {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-all;
+      cursor: text;
+      user-select: all;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Splash Screen ──────────────────────────────────────────── -->
+<div id="splash">
+  <div class="logo">
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="40" height="40" rx="10" fill="#f76e3c" fill-opacity="0.15"/>
+      <path d="M20 6L34 14V26L20 34L6 26V14L20 6Z" stroke="#f76e3c" stroke-width="2" fill="none"/>
+      <path d="M20 6L20 34M6 14L34 14M6 26L34 26" stroke="#f76e3c" stroke-width="1.5" stroke-opacity="0.4"/>
+    </svg>
+    TiDB Cloud <span style="color:var(--accent)">Zero</span>
+  </div>
+  <div class="spinner-wrap">
+    <div class="spinner"></div>
+    <div id="splash-status">Initializing…</div>
+  </div>
+  <div id="splash-error">
+    <strong>Failed to provision instance</strong><br>
+    <span id="splash-error-msg"></span>
+    <br>
+    <button onclick="retryInit()">Retry</button>
+  </div>
+</div>
+
+<!-- ── App Shell ──────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">TiDB Cloud <span>Zero</span></div>
+      <span class="badge badge-preview">Technical Preview</span>
+    </div>
+    <div class="topbar-right">
+      <div id="instance-info">
+        <div class="dot"></div>
+        <span id="expiry"></span>
+      </div>
+      <button class="btn btn-ghost" onclick="showConnModal()">Connection Info</button>
+      <button class="btn btn-ghost" onclick="newInstance()">New Instance</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main-area">
+    <!-- Center: editor + results -->
+    <div id="center-area">
+      <!-- Editor pane -->
+      <div id="editor-pane">
+        <div class="editor-toolbar">
+          <div class="editor-toolbar-left">
+            <span class="toolbar-label">SQL Editor</span>
+            <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-ghost" onclick="clearEditor()">Clear</button>
+            <button class="btn btn-run" id="run-btn" onclick="runQuery()">
+              ▶ Run
+            </button>
+          </div>
+        </div>
+        <textarea
+          id="sql-editor"
+          spellcheck="false"
+          autocomplete="off"
+          autocorrect="off"
+          placeholder="-- Write your SQL here&#10;-- e.g. SELECT version();&#10;-- e.g. CREATE TABLE users (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100));"
+        ></textarea>
+      </div>
+
+      <!-- Results pane -->
+      <div id="results-pane">
+        <div class="results-toolbar">
+          <span class="toolbar-label">Results</span>
+          <div class="results-meta" id="results-meta"></div>
+        </div>
+        <div id="results-scroll">
+          <div id="results-container">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18M3 15h18M9 3v18"/>
+              </svg>
+              <p>Run a query to see results</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History sidebar -->
+    <div id="history-pane">
+      <div class="history-header">History</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Connection info modal -->
+<div id="conn-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      Connection Details
+      <span class="modal-close" onclick="closeConnModal()">×</span>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Connection String</div>
+      <div class="conn-value" id="modal-connstr"></div>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Host</div>
+      <div class="conn-value" id="modal-host"></div>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Username</div>
+      <div class="conn-value" id="modal-user"></div>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Password</div>
+      <div class="conn-value" id="modal-pass"></div>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Database</div>
+      <div class="conn-value" id="modal-db"></div>
+    </div>
+    <div class="conn-row">
+      <div class="conn-label">Expires At</div>
+      <div class="conn-value" id="modal-expires"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'tidb-zero-instance-v1';
+
+  let dbConfig = null;
+  let queryHistory = [];
+
+  // ── Instance Management ───────────────────────────────────────
+
+  // L1: localStorage  (per-browser, survives page reloads)
+  // L2: /api/instance (server-side module cache, shared across browsers while warm)
+  // Creating a new instance clears both layers.
+
+  async function fetchInstance(forceNew = false) {
+    setSplashStatus(forceNew ? 'Provisioning new TiDB Cloud Zero instance…' : 'Connecting to TiDB Cloud Zero…');
+    const res = await fetch('/api/instance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ force: forceNew }),
+    });
+    if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+    return res.json(); // { connectionString, expiresAt }
+  }
+
+  function parseConnectionString(connStr) {
+    // mysql://user:pass@host/database
+    const url = new URL(connStr);
+    return {
+      host:     url.hostname,
+      username: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: url.pathname.replace(/^\//, '') || 'test',
+    };
+  }
+
+  function isExpired(expiresAt) {
+    // Treat as expired if less than 5 minutes remain
+    return !expiresAt || new Date(expiresAt) <= new Date(Date.now() + 5 * 60_000);
+  }
+
+  // ── SQL Execution ─────────────────────────────────────────────
+
+  async function executeSQL(sql) {
+    const { host, username, password, database } = dbConfig;
+
+    const res = await fetch('/api/sql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ host, username, password, database, query: sql }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // ── Run Query ─────────────────────────────────────────────────
+
+  async function runQuery() {
+    const sql = document.getElementById('sql-editor').value.trim();
+    if (!sql) return;
+
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running…';
+
+    setResultsMeta([]);
+    setResultsContent('<div class="empty-state"><div class="spinner"></div></div>');
+
+    const t0 = Date.now();
+    try {
+      const result = await executeSQL(sql);
+      const elapsed = Date.now() - t0;
+      renderResult(result, elapsed);
+      addHistory(sql);
+    } catch (err) {
+      const elapsed = Date.now() - t0;
+      setResultsMeta([{ label: 'Error', cls: 'pill-error' }]);
+      setResultsContent(`<div class="error-box">${escHtml(err.message)}</div>`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '▶ Run';
+    }
+  }
+
+  function renderResult(result, elapsed) {
+    const meta = [];
+
+    // SELECT-like: has columns + rows
+    if (result.types && result.rows !== undefined) {
+      const cols  = result.types;  // array of { name, type }
+      const rows  = result.rows;   // array of arrays
+      const count = rows ? rows.length : 0;
+
+      meta.push({ label: `${count} row${count !== 1 ? 's' : ''}`, cls: 'pill-rows' });
+      meta.push({ label: `${elapsed}ms`, cls: 'pill-time' });
+      setResultsMeta(meta);
+
+      if (count === 0) {
+        setResultsContent('<div class="empty-state"><p>Query returned 0 rows</p></div>');
+        return;
+      }
+
+      let html = '<div class="result-table-wrap"><table><thead><tr>';
+      for (const col of cols) {
+        html += `<th>${escHtml(col.name)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (const row of rows) {
+        html += '<tr>';
+        for (let i = 0; i < cols.length; i++) {
+          const val = row[i];
+          if (val === null || val === undefined) {
+            html += `<td class="null-val">NULL</td>`;
+          } else {
+            const type = (cols[i].type || '').toLowerCase();
+            const isNum = /int|float|double|decimal|bigint|tinyint|smallint/.test(type);
+            const cls   = isNum ? 'num-val' : 'str-val';
+            html += `<td class="${cls}" title="${escHtml(String(val))}">${escHtml(String(val))}</td>`;
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      setResultsContent(html);
+
+    } else {
+      // DML/DDL: rowsAffected
+      const affected = result.rowsAffected ?? 0;
+      const insertId = result.lastInsertID ?? result.lastInsertId ?? null;
+
+      meta.push({ label: `${affected} affected`, cls: 'pill-affected' });
+      meta.push({ label: `${elapsed}ms`, cls: 'pill-time' });
+      setResultsMeta(meta);
+
+      let msg = `Query OK — <strong>${affected}</strong> row${affected !== 1 ? 's' : ''} affected`;
+      if (insertId !== null && insertId !== 0) msg += ` &nbsp;·&nbsp; Last insert ID: <strong>${insertId}</strong>`;
+      setResultsContent(`<div class="success-box">${msg}</div>`);
+    }
+  }
+
+  // ── UI Helpers ────────────────────────────────────────────────
+
+  function setSplashStatus(msg) {
+    document.getElementById('splash-status').textContent = msg;
+  }
+
+  function showApp() {
+    const splash = document.getElementById('splash');
+    splash.classList.add('hidden');
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.flexDirection = 'column';
+  }
+
+  function showSplashError(msg) {
+    document.querySelector('.spinner-wrap').style.display = 'none';
+    const errEl = document.getElementById('splash-error');
+    errEl.style.display = 'block';
+    document.getElementById('splash-error-msg').textContent = msg;
+  }
+
+  function setResultsMeta(items) {
+    const el = document.getElementById('results-meta');
+    el.innerHTML = items.map(i =>
+      `<span class="meta-pill ${i.cls}">${i.label}</span>`
+    ).join('');
+  }
+
+  function setResultsContent(html) {
+    document.getElementById('results-container').innerHTML = html;
+  }
+
+  function updateInstanceUI(instance) {
+    const expires = new Date(instance.expiresAt);
+    const hoursLeft = ((expires - Date.now()) / 3_600_000).toFixed(1);
+    document.getElementById('expiry').textContent = `Expires in ${hoursLeft}h`;
+
+    // Modal
+    const cfg = parseConnectionString(instance.connectionString);
+    document.getElementById('modal-connstr').textContent  = instance.connectionString;
+    document.getElementById('modal-host').textContent     = cfg.host;
+    document.getElementById('modal-user').textContent     = cfg.username;
+    document.getElementById('modal-pass').textContent     = cfg.password;
+    document.getElementById('modal-db').textContent       = cfg.database;
+    document.getElementById('modal-expires').textContent  = expires.toLocaleString();
+  }
+
+  function clearEditor() {
+    document.getElementById('sql-editor').value = '';
+    document.getElementById('sql-editor').focus();
+  }
+
+  function addHistory(sql) {
+    const short = sql.replace(/\s+/g, ' ').trim().slice(0, 60);
+    queryHistory.unshift(short);
+    if (queryHistory.length > 50) queryHistory.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = queryHistory.map((q, i) =>
+      `<div class="history-item" title="${escHtml(q)}" onclick="loadHistory(${i})">${escHtml(q)}</div>`
+    ).join('');
+  }
+
+  function loadHistory(idx) {
+    document.getElementById('sql-editor').value = queryHistory[idx];
+  }
+
+  function showConnModal() { document.getElementById('conn-modal').classList.add('open'); }
+  function closeConnModal() { document.getElementById('conn-modal').classList.remove('open'); }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Click outside modal to close
+  document.getElementById('conn-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('conn-modal')) closeConnModal();
+  });
+
+  // Ctrl+Enter to run
+  document.getElementById('sql-editor').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runQuery();
+    }
+    // Tab inserts spaces
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const ta = e.target;
+      const s = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 2;
+    }
+  });
+
+  // ── Init ──────────────────────────────────────────────────────
+
+  async function init(forceNew = false) {
+    // L1: check localStorage first (fastest, avoids a round-trip on warm revisits)
+    if (!forceNew) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!isExpired(parsed.expiresAt)) {
+            setSplashStatus('Reconnecting to existing instance…');
+            dbConfig = parseConnectionString(parsed.connectionString);
+            updateInstanceUI(parsed);
+            showApp();
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // L2: ask the server (it keeps its own module-level cache shared across clients)
+    try {
+      const instance = await fetchInstance(forceNew);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(instance));
+      dbConfig = parseConnectionString(instance.connectionString);
+      updateInstanceUI(instance);
+      showApp();
+    } catch (err) {
+      showSplashError(err.message);
+    }
+  }
+
+  async function newInstance() {
+    if (!confirm('Create a new instance? The current instance and all its data will be discarded.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('splash').style.display = 'flex';
+    document.getElementById('splash').classList.remove('hidden');
+    document.querySelector('.spinner-wrap').style.display = 'flex';
+    document.getElementById('splash-error').style.display = 'none';
+    await init(true); // forceNew=true clears server cache too
+  }
+
+  function retryInit() {
+    document.querySelector('.spinner-wrap').style.display = 'flex';
+    document.getElementById('splash-error').style.display = 'none';
+    init(false);
+  }
+
+  init(false);
+</script>
+</body>
+</html>
