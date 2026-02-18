@@ -486,14 +486,14 @@
             </div>
           </div>
 
-          <!-- Demo 5: Full-Text Search -->
+          <!-- Demo 5: Agent Tool Call Log -->
           <div class="demo-card" id="demo-card-4">
             <div class="demo-card-header">
-              <span class="demo-icon">📝</span>
-              <span class="demo-card-title">Full-Text Search</span>
+              <span class="demo-icon">📊</span>
+              <span class="demo-card-title">Agent Tool Call Log</span>
             </div>
             <div class="demo-card-body">
-              <div class="demo-card-desc">Index and search natural language content at scale — useful for retrieval-augmented generation (RAG).</div>
+              <div class="demo-card-desc">Time-series log of every tool an AI agent calls — with latency tracking and a per-tool performance report.</div>
               <div class="demo-card-footer">
                 <button class="demo-btn demo-btn-load" onclick="loadDemo(4)">Load</button>
                 <button class="demo-btn demo-btn-run"  onclick="loadAndRunDemo(4)">Run All</button>
@@ -703,34 +703,45 @@ ORDER  BY key_name`,
       ],
     },
     {
-      name: '📝 Full-Text Search',
+      name: '📊 Agent Tool Call Log',
       statements: [
-        `-- Full-text search for RAG (Retrieval-Augmented Generation).
--- Index large text corpora and retrieve relevant chunks fast.
-CREATE TABLE IF NOT EXISTS documents (
+        `-- Time-series event log for AI agent tool calls.
+-- Track every action an agent takes with latency and status.
+CREATE TABLE IF NOT EXISTS tool_calls (
   id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-  title      VARCHAR(255) NOT NULL,
-  body       TEXT NOT NULL,
-  author     VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FULLTEXT INDEX ft_body (title, body)
+  agent_id   VARCHAR(64)  NOT NULL,
+  tool_name  VARCHAR(100) NOT NULL,
+  input      JSON,
+  output     JSON,
+  status     ENUM('success','error','timeout') DEFAULT 'success',
+  latency_ms INT          NOT NULL DEFAULT 0,
+  called_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_agent  (agent_id, called_at),
+  INDEX idx_tool   (tool_name, called_at)
 )`,
-        `-- Insert sample documents (knowledge base chunks)
-INSERT INTO documents (title, body, author) VALUES
-  ('TiDB Architecture',      'TiDB separates compute from storage. TiKV handles key-value storage with Raft consensus. TiFlash provides columnar storage for analytical queries.', 'PingCAP'),
-  ('Vector Search in TiDB',  'TiDB supports native VECTOR data type with cosine distance and L2 distance functions. Ideal for semantic search in AI applications.', 'PingCAP'),
-  ('Serverless Databases',   'Serverless databases scale to zero and charge per request. TiDB Cloud Serverless and Zero offer instant provisioning without configuration.', 'PingCAP'),
-  ('AI Agent Architectures', 'Modern AI agents combine LLMs with external memory stores, tool use, and retrieval systems. Databases play a central role in agent state management.', 'Research'),
-  ('RAG with TiDB',          'Retrieval-augmented generation uses a vector database to fetch relevant context before passing it to an LLM. TiDB can serve both vector and relational needs.', 'PingCAP')`,
-        `-- Full-text search across title and body
+        `-- Simulate a series of agent tool calls
+INSERT INTO tool_calls (agent_id, tool_name, input, output, status, latency_ms) VALUES
+  ('agent_01', 'web_search',    '{"query":"TiDB vector search"}',         '{"results":3}',           'success', 320),
+  ('agent_01', 'memory_read',   '{"session":"sess_demo","limit":5}',      '{"memories":5}',          'success',  12),
+  ('agent_01', 'code_runner',   '{"lang":"python","code":"print(1+1)"}',  '{"output":"2"}',          'success', 890),
+  ('agent_01', 'web_search',    '{"query":"serverless databases 2025"}',  '{"results":7}',           'success', 415),
+  ('agent_01', 'memory_write',  '{"content":"TiDB supports VECTOR type"}','{"saved":true}',          'success',   8),
+  ('agent_01', 'code_runner',   '{"lang":"sql","code":"SELECT 1"}',       '{"error":"timeout"}',     'timeout',5000),
+  ('agent_02', 'web_search',    '{"query":"AI agent frameworks"}',        '{"results":12}',          'success', 280),
+  ('agent_02', 'memory_read',   '{"session":"sess_02","limit":10}',       '{"memories":2}',          'success',   9),
+  ('agent_02', 'file_write',    '{"path":"report.md"}',                   '{"bytes":2048}',          'success', 145)`,
+        `-- Aggregate: tool performance report per agent
 SELECT
-  title,
-  author,
-  MATCH(title, body) AGAINST ('vector search AI agent' IN NATURAL LANGUAGE MODE) AS relevance,
-  LEFT(body, 100) AS excerpt
-FROM   documents
-WHERE  MATCH(title, body) AGAINST ('vector search AI agent' IN NATURAL LANGUAGE MODE)
-ORDER  BY relevance DESC`,
+  agent_id,
+  tool_name,
+  COUNT(*)                                      AS calls,
+  SUM(status = 'success')                       AS success,
+  SUM(status = 'error') + SUM(status='timeout') AS failures,
+  ROUND(AVG(latency_ms))                        AS avg_ms,
+  MAX(latency_ms)                               AS max_ms
+FROM   tool_calls
+GROUP  BY agent_id, tool_name
+ORDER  BY agent_id, calls DESC`,
       ],
     },
   ];
