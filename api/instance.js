@@ -2,6 +2,7 @@ const ZERO_API = 'https://zero.tidbapi.com/v1alpha1/instances';
 
 // Module-level cache — survives across warm requests on the same function instance.
 // Acts as a shared server-side L2 cache on top of the client's localStorage L1 cache.
+// Instances have a 30-day TTL; we evict only when < 5 minutes remain.
 let cached = null;
 
 function isExpired(expiresAt) {

@@ -385,13 +385,13 @@
       <div class="banner-desc">
         A full MySQL-compatible database provisioned in milliseconds — no signup, no config.
         Use the SQL editor below to run queries, or pick a demo from the left panel to explore
-        common use cases like AI agent memory and vector search. Your instance expires in ~72h.
+        common use cases like AI agent memory and vector search. Your instance expires in ~30 days.
       </div>
       <div class="banner-pills">
         <span class="banner-pill p-green">MySQL 8.0 compatible</span>
         <span class="banner-pill p-blue">Vector search</span>
         <span class="banner-pill p-purple">Full-text search</span>
-        <span class="banner-pill p-yellow">72h TTL · No signup</span>
+        <span class="banner-pill p-yellow">30-day TTL · No signup</span>
       </div>
     </div>
     <button class="banner-close" onclick="dismissBanner()" title="Dismiss">×</button>
@@ -414,7 +414,7 @@
             <div class="fact"><div class="fact-dot" style="background:var(--green)"></div>Instant provisioning, no signup</div>
             <div class="fact"><div class="fact-dot" style="background:var(--blue)"></div>MySQL-compatible (TiDB 8.0)</div>
             <div class="fact"><div class="fact-dot" style="background:var(--purple)"></div>Native vector &amp; full-text search</div>
-            <div class="fact"><div class="fact-dot" style="background:var(--yellow)"></div>Auto-expires after 72 hours</div>
+            <div class="fact"><div class="fact-dot" style="background:var(--yellow)"></div>Auto-expires after 30 days</div>
             <div class="fact"><div class="fact-dot" style="background:var(--accent)"></div>One shared instance per session</div>
           </div>
         </div>
@@ -998,8 +998,12 @@ ORDER  BY agent_id, calls DESC`,
 
   function updateInstanceUI(instance) {
     const expires   = new Date(instance.expiresAt);
-    const hoursLeft = ((expires - Date.now()) / 3_600_000).toFixed(1);
-    document.getElementById('expiry').textContent = `Expires in ${hoursLeft}h`;
+    const msLeft   = expires - Date.now();
+    const daysLeft = msLeft / 86_400_000;
+    const expiryLabel = daysLeft >= 1
+      ? `Expires in ${daysLeft.toFixed(1)}d`
+      : `Expires in ${(msLeft / 3_600_000).toFixed(1)}h`;
+    document.getElementById('expiry').textContent = expiryLabel;
     const cfg = parseConnectionString(instance.connectionString);
     document.getElementById('modal-connstr').textContent = instance.connectionString;
     document.getElementById('modal-host').textContent    = cfg.host;
